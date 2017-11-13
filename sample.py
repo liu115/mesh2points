@@ -9,6 +9,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('-i', '--input', help='input file', required=True)
 parser.add_argument('-o', '--output', help='output file', required=True)
 parser.add_argument('-n', '--number', help='sample number', default=100, type=int)
+parser.add_argument('--normalize', action='store_true', help='normalize to unit ball')
 args = parser.parse_args()
 print(args)
 
@@ -17,6 +18,7 @@ def triangle_area(v1, v2, v3):
     a = np.array(v2) - np.array(v1)
     b = np.array(v3) - np.array(v1)
     return math.sqrt(np.dot(a, a) * np.dot(b, b) - (np.dot(a, b) ** 2)) / 2.0
+
 
 def cal_suface_area(mesh):
     areas = []
@@ -47,6 +49,7 @@ if __name__ == '__main__':
     total_area = prefix_sum[-1]
     print("total area: ", total_area)
 
+    sample_points = []
     for i in range(sample_num):
         prob = random.random()
         sample_pos = prob * total_area
@@ -81,6 +84,16 @@ if __name__ == '__main__':
         target_point = np.array(v1) + (edge_vec1 * prob_vec1 + edge_vec2 * prob_vec2)
         # Random picking point in a triangle: http://mathworld.wolfram.com/TrianglePointPicking.html
 
+        sample_points.append(target_point)
 
-        output.write( ' '.join(["%.3f" % _ for _ in target_point]) )
+
+    if args.normalize:
+        print('Apply normalization to unit ball')
+        norms = np.linalg.norm(sample_points, axis=1)
+        max_norm = max(norms)
+        print('max norm: ', max_norm)
+        sample_points /= max_norm
+
+    for points in sample_points:
+        output.write( ' '.join(["%.4f" % _ for _ in points]) )
         output.write('\n')
